@@ -1,0 +1,47 @@
+.error-boundary-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: 20px;
+  background-color: var(--bg-color, #ffffff);
+  color: var(--text-color, #333333);
+
+  .error-card {
+    text-align: center;
+    padding: 40px;
+    border-radius: 16px;
+    background: var(--card-bg, #f8f9fa);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    max-width: 480px;
+    width: 100%;
+
+    h2 {
+      font-size: 24px;
+      margin-bottom: 12px;
+      color: #e53935;
+    }
+
+    p {
+      color: var(--text-secondary, #666666);
+      margin-bottom: 24px;
+      font-size: 15px;
+    }
+
+    .reload-btn {
+      background-color: var(--primary-color, #24355a);
+      color: #ffffff;
+      border: none;
+      padding: 12px 28px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+  }
+}

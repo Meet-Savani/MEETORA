@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MEETORA | Find, Book & Host Unique Properties</title>
+  <script>
+    // SPA Fallback Redirect for static hosting platforms that serve 404.html
+    // Preserves the full path and query string when refreshing internal routes
+    (function() {
+      var pathname = window.location.pathname;
+      var search = window.location.search;
+      var hash = window.location.hash;
+      // If we are already on root, do nothing
+      if (pathname === '/' || pathname === '/index.html' || pathname === '/404.html') {
+        return;
+      }
+      sessionStorage.setItem('spa_redirect_path', pathname + search + hash);
+      window.location.replace('/');
+    })();
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>

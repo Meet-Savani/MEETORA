@@ -1,0 +1,106 @@
+.toast-notification-box {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 20000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px;
+    min-width: 320px;
+    max-width: 450px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    font-family: 'Outfit', sans-serif;
+    animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+    @media (max-width: 640px) {
+        top: 14px;
+        left: 14px;
+        right: 14px;
+        min-width: 0;
+        max-width: calc(100vw - 28px);
+        width: auto;
+        padding: 12px 14px;
+        gap: 10px;
+    }
+
+    body[data-theme='dark'] & {
+        background: rgba(30, 41, 59, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    &.success {
+        border-left: 4px solid #22c55e;
+    }
+    &.error {
+        border-left: 4px solid #ef4444;
+    }
+    &.info {
+        border-left: 4px solid #3b82f6;
+    }
+
+    .toast-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        flex: 1;
+
+        .toast-icon {
+            font-size: 22px;
+            flex-shrink: 0;
+
+            &.success { color: #22c55e; }
+            &.error { color: #ef4444; }
+            &.info { color: #3b82f6; }
+        }
+
+        .toast-message {
+            font-size: 14px;
+            font-weight: 550;
+            color: var(--text-color);
+            line-height: 1.4;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+    }
+
+    .toast-close-btn {
+        background: transparent;
+        border: none;
+        color: var(--secondary-text-color);
+        cursor: pointer;
+        opacity: 0.6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+
+        &:hover {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.05);
+            body[data-theme='dark'] & {
+                background: rgba(255, 255, 255, 0.05);
+            }
+        }
+    }
+}
+
+@keyframes toastSlideIn {
+    from {
+        transform: translateY(-20px) scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}

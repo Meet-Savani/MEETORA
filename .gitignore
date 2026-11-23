@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+
+# Frontend builds
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/out/
+
+# Backend Python
+__pycache__/
+*.py[cod]
+venv/
+env/
+.venv/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Database
+*.sqlite3
+*.db
+
+# Logs
+*.log
+logs/
+
+# Testing and cache
+coverage/
+.pytest_cache/
+.coverage
+.cache/
+
+# Build files
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Root public folder
+/public/
+
+# Multer stored items / Uploaded files
+backend/public/uploads/*
+!backend/public/uploads/.gitkeep

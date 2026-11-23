@@ -1,0 +1,178 @@
+@import "./breakpoints.scss";
+
+.property-management-page {
+    .property-management-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+
+        .subtitle {
+            color: var(--secondary-text-color);
+            font-size: 15px;
+            margin: 4px 0 0;
+        }
+    }
+
+    .add-property-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 12px 20px;
+        background: var(--primary-color, #22c55e);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+        }
+    }
+}
+
+.property-management-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    padding-bottom: 80px;
+}
+
+.property-management-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border-color, #eaeaea);
+    border-radius: 16px;
+    padding: 12px;
+    gap: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+    }
+
+    // Reset inner ListingCard shadows/borders to blend inside the wrapper
+    .listing-card {
+        width: 100%;
+        max-width: none;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        background: transparent !important;
+        margin: 0 !important;
+        transform: none !important;
+        transition: none !important;
+
+        &:hover {
+            transform: none !important;
+            box-shadow: none !important;
+            border-color: transparent !important;
+        }
+
+        .slider-container {
+            margin-bottom: 8px;
+        }
+    }
+}
+
+.property-card-meta {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 15;
+    pointer-events: none;
+
+    .status-badge-table {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(4px);
+
+        &.approved { background: rgba(34, 197, 94, 0.9); color: white; }
+        &.pending { background: rgba(251, 191, 36, 0.95); color: white; }
+        &.rejected { background: rgba(239, 68, 68, 0.95); color: white; }
+        &.paused, &.suspended, &.archived { background: rgba(107, 114, 128, 0.9); color: white; }
+    }
+}
+
+.property-card-actions {
+    display: flex;
+    gap: 8px;
+    border-top: 1px solid var(--border-color, #eaeaea);
+    padding-top: 12px;
+    margin-top: auto; // Push actions to the bottom
+
+    button {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 9px 10px;
+        border: 1px solid var(--border-color, #eaeaea);
+        border-radius: 8px;
+        background: var(--card-bg, #fff);
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--text-color);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+
+        &:hover:not(:disabled) {
+            border-color: var(--primary-color, #22c55e);
+            color: var(--primary-color, #22c55e);
+            background: rgba(34, 197, 94, 0.02);
+        }
+
+        &.danger {
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.02);
+
+            &:hover:not(:disabled) {
+                background: #ef4444;
+                color: white;
+                border-color: #ef4444;
+                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+            }
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+}
+
+.property-empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--secondary-text-color);
+
+    button {
+        margin-top: 16px;
+        padding: 12px 24px;
+        background: var(--primary-color, #22c55e);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+}

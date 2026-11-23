@@ -1,0 +1,135 @@
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    
+        &:hover {
+        transform: scale(1.05);
+        }
+    
+        .toggle-switch {
+        width: 80px; 
+        height: 38px; 
+        border-radius: 40px;
+        background: var(--nav-bg);
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        position: relative;
+        transition: background 0.3s ease, border-color 0.3s ease;
+        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.1);
+    
+        &.active {
+            background: var(--nav-bg);
+            border-color: rgba(255, 255, 255, 0.1);
+    
+            .toggle-circle {
+            left: 42px; 
+            }
+        }
+    
+        .toggle-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-color);
+            position: absolute;
+            top: 2.5px;
+            left: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    
+            .icon {
+            font-size: 22px !important;
+            transition: color 0.3s ease, transform 0.3s ease;
+            }
+    
+            .moon {
+            color: #607D8B !important; 
+            }
+    
+            .sun {
+            color: #FFD54F !important; 
+            transform: rotate(20deg);
+            }
+        }
+    }
+}
+
+/* Unified Master Theme Variables */
+body[data-theme='light'] {
+    --bg-color: #ffffff;
+    --card-bg: #ffffff;
+    --nav-bg: #ffffff;
+    --nav-text: #0f172a;
+    --text-color: #0f172a;
+    --secondary-text-color: #64748b;
+    --border-color: #e2e8f0;
+    --input-bg: #f8fafc;
+    --input-border: #cbd5e1;
+    --primary-color: #22c55e;
+    --primary: #22c55e;
+    --primary-hover: #16a34a;
+    --primary-light-alpha: rgba(34, 197, 94, 0.12);
+    --hover-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+body[data-theme='dark'] {
+    --bg-color: #0e1411;
+    --card-bg: #18221c;
+    --nav-bg: #131b16;
+    --nav-text: #f1f5f3;
+    --text-color: #f1f5f3;
+    --secondary-text-color: #9cb0a4;
+    --border-color: #26382e;
+    --input-bg: #1c2821;
+    --input-border: #2e4337;
+    --primary-color: #22c55e;
+    --primary: #22c55e;
+    --primary-hover: #16a34a;
+    --primary-light-alpha: rgba(34, 197, 94, 0.18);
+    --hover-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure inputs, selects and textareas maintain crisp contrast in both themes */
+input, select, textarea {
+    color: var(--text-color);
+    background-color: var(--input-bg);
+}
+
+input::placeholder, textarea::placeholder {
+    color: var(--secondary-text-color);
+    opacity: 0.75;
+}
+
+select option {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+/* Material UI Dark Theme Paper & Dialog Overrides */
+body[data-theme='dark'] .MuiPaper-root {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+}
+
+body[data-theme='dark'] .MuiDialogTitle-root,
+body[data-theme='dark'] .MuiDialogContent-root,
+body[data-theme='dark'] .MuiDialogActions-root,
+body[data-theme='dark'] .MuiTypography-root {
+    color: var(--text-color);
+}
+
+body[data-theme='dark'] .MuiInputBase-root {
+    color: var(--text-color) !important;
+    background-color: var(--input-bg) !important;
+}

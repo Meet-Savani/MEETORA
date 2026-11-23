@@ -1,0 +1,165 @@
+.loader-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 70vh;
+    background-color: var(--bg-color, #ffffff);
+    overflow: hidden;
+    transition: background-color 0.3s ease;
+}
+
+.meetora-loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+
+    .house-svg {
+        fill: none;
+        stroke: var(--text-color, #000000);
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+
+        .ground {
+            stroke-dasharray: 80;
+            stroke-dashoffset: 80;
+            animation: drawLine 2s ease forwards infinite;
+        }
+
+        .walls {
+            stroke-dasharray: 180;
+            stroke-dashoffset: 180;
+            animation: drawLine 2s ease forwards infinite;
+            animation-delay: 0.2s;
+        }
+
+        .roof {
+            stroke-dasharray: 150;
+            stroke-dashoffset: 150;
+            animation: drawLine 2s ease forwards infinite;
+            animation-delay: 0.4s;
+        }
+
+        .chimney {
+            stroke-dasharray: 50;
+            stroke-dashoffset: 50;
+            animation: drawLine 2s ease forwards infinite;
+            animation-delay: 0.6s;
+        }
+
+        .door {
+            stroke-dasharray: 60;
+            stroke-dashoffset: 60;
+            animation: drawLine 2s ease forwards infinite;
+            animation-delay: 0.8s;
+        }
+
+        .handle {
+            fill: var(--text-color, #000000);
+            opacity: 0;
+            animation: fadeIn 2s ease forwards infinite;
+            animation-delay: 1.2s;
+        }
+
+        .window, .window-line-h, .window-line-v {
+            stroke-dasharray: 40;
+            stroke-dashoffset: 40;
+            animation: drawLine 2s ease forwards infinite;
+            animation-delay: 1s;
+        }
+
+        .smoke {
+            fill: var(--text-color, #000000);
+            stroke: none;
+            opacity: 0;
+            transform-origin: bottom center;
+        }
+
+        .smoke-1 {
+            animation: floatSmoke 2s ease-in-out infinite;
+            animation-delay: 1.1s;
+        }
+
+        .smoke-2 {
+            animation: floatSmoke 2s ease-in-out infinite;
+            animation-delay: 1.4s;
+        }
+
+        .smoke-3 {
+            animation: floatSmoke 2s ease-in-out infinite;
+            animation-delay: 1.7s;
+        }
+    }
+
+    .loading-text {
+        font-family: 'Inter', sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-color, #000000);
+        margin: 0;
+        letter-spacing: 0.5px;
+        animation: pulseText 1.5s ease-in-out infinite;
+    }
+}
+
+@keyframes drawLine {
+    0% {
+        stroke-dashoffset: 180;
+        opacity: 0;
+    }
+    15% {
+        opacity: 1;
+    }
+    45% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+    85% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+    100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+    }
+}
+
+@keyframes fadeIn {
+    0%, 55% {
+        opacity: 0;
+    }
+    65%, 85% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes floatSmoke {
+    0%, 55% {
+        transform: translateY(10px) scale(0.3);
+        opacity: 0;
+    }
+    65% {
+        opacity: 0.5;
+    }
+    85% {
+        transform: translateY(-20px) scale(1.2) translateX(8px);
+        opacity: 0;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes pulseText {
+    0%, 100% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 1;
+    }
+}

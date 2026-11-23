@@ -1,0 +1,55 @@
+$green: #22c55e;
+$green-dark: #16a34a;
+$green-light: #4ade80;
+
+$blue: #24355a;
+$lightgrey: #f7f8f8;
+$grey: #bdb9b9;
+$darkgrey: #969393;
+
+/* Light Mode Palette */
+$light-bg: #ffffff;
+$light-text: #0f172a;
+$light-nav: #ffffff;
+$light-card: #ffffff;
+
+/* Dark Mode Palette */
+$dark-bg: #0e1411;
+$dark-text: #f1f5f3;
+$dark-nav: #131b16;
+$dark-card: #18221c;
+
+@mixin shadow {
+    box-shadow: 0 3px 10px 2px rgba(0, 0, 0, 0.2);
+}
+
+@mixin buttonStyle {
+    padding: 10px 15px;
+    background-color: $green;
+    border: none;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s ease;
+    color: white;
+    border-radius: 10px;
+
+    &:hover {
+        background-color: $green-dark;
+        transform: scale(1.03);
+    }
+}
+
+:export {
+    green: $green;
+    greenDark: $green-dark;
+    greenLight: $green-light;
+    blue: $blue;
+    lightgrey: $lightgrey;
+    grey: $grey;
+    darkgrey: $darkgrey;
+    lightBg: $light-bg;
+    lightText: $light-text;
+    darkBg: $dark-bg;
+    darkText: $dark-text;
+}
