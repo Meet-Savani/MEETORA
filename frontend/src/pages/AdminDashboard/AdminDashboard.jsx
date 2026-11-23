@@ -18,6 +18,7 @@ import { apiFetch, apiPatch, apiPost, apiPut, apiDelete, openAuthenticatedPdf } 
 import ThemeToggle from '../../components/ThemeToggle/ThemeToggle';
 import { resolveImageUrl } from '../../utils/image';
 import { normalizeAmenities } from '../../utils/amenities';
+import { broadcastSync, subscribeSync } from '../../utils/syncEvents';
 
 const DonutChart = ({ data = [], colors = [] }) => {
     const [hoveredIdx, setHoveredIdx] = useState(null);
@@ -509,12 +510,12 @@ const AdminDashboard = () => {
         if (user && user.role === 'admin') {
             fetchAllData();
 
-            // Real-time synchronization for admin monitoring
+            // Real-time synchronization for admin monitoring (instant sync + 3s fallback)
             const pollInterval = setInterval(() => {
                 if (document.visibilityState === 'visible') {
                     fetchAllData();
                 }
-            }, 6000);
+            }, 3000);
 
             const handleFocus = () => {
                 fetchAllData();
@@ -522,20 +523,71 @@ const AdminDashboard = () => {
             window.addEventListener('focus', handleFocus);
             document.addEventListener('visibilitychange', handleFocus);
 
+            const unsubscribe = subscribeSync(() => {
+                fetchAllData();
+            });
+
             return () => {
                 clearInterval(pollInterval);
                 window.removeEventListener('focus', handleFocus);
                 document.removeEventListener('visibilitychange', handleFocus);
+                unsubscribe();
             };
         }
     }, [user]);
 
     // Action handlers
+    const [roleModalState, setRoleModalState] = useState({
+        isOpen: false,
+        userId: null,
+        userName: '',
+        targetRole: '',
+        currentRole: '',
+    });
+
+    const handleRoleChangeRequest = (userId, targetRole, userName, currentRole) => {
+        if (!targetRole || targetRole === currentRole) return;
+        setRoleModalState({
+            isOpen: true,
+            userId,
+            userName: userName || 'User',
+            targetRole,
+            currentRole,
+        });
+    };
+
+    const confirmRoleChange = async () => {
+        const { userId, targetRole, userName } = roleModalState;
+        setRoleModalState(prev => ({ ...prev, isOpen: false }));
+        if (!userId || !targetRole) return;
+
+        try {
+            const res = await apiPatch(`/admin/users/${userId}/role`, { role: targetRole });
+            const data = await res.json();
+            if (res.ok) {
+                dispatch(setToast({ 
+                    message: data.message || `Role for ${userName} changed to ${targetRole}.`, 
+                    type: "success" 
+                }));
+                broadcastSync('USER_ROLE_UPDATED', { userId, role: targetRole });
+                fetchAllData();
+            } else {
+                dispatch(setToast({ 
+                    message: data.message || "Failed to update user role.", 
+                    type: "error" 
+                }));
+            }
+        } catch (err) {
+            console.error("Error updating user role:", err);
+            dispatch(setToast({ message: "An error occurred while updating user role.", type: "error" }));
+        }
+    };
+
     const toggleUserVerification = async (userId) => {
         try {
             const res = await apiPatch(`/admin/users/${userId}/verify`, {});
             if (res.ok) {
-                dispatch(setToast({ message: "Verification status changed successfully.", type: "success" }));
+                dispatch(setToast({ message: "Role toggled successfully.", type: "success" }));
                 fetchAllData();
             }
         } catch (err) {
@@ -548,6 +600,7 @@ const AdminDashboard = () => {
             const res = await apiPatch(`/admin/properties/${listingId}/approve`, { action });
             if (res.ok) {
                 dispatch(setToast({ message: `Listing ${action} successfully.`, type: "success" }));
+                broadcastSync('PROPERTY_MODERATED', { listingId, action });
                 fetchAllData();
             }
         } catch (err) {
@@ -767,6 +820,7 @@ const AdminDashboard = () => {
             const res = await apiPatch(`/admin/users/${userId}/approve-host`, {});
             if (res.ok) {
                 dispatch(setToast({ message: "Host application approved successfully.", type: "success" }));
+                broadcastSync('HOST_STATUS_UPDATED', { userId, status: 'approved' });
                 fetchAllData();
             } else {
                 dispatch(setToast({ message: "Failed to approve host.", type: "error" }));
@@ -781,6 +835,7 @@ const AdminDashboard = () => {
             const res = await apiPatch(`/admin/users/${userId}/reject-host`, {});
             if (res.ok) {
                 dispatch(setToast({ message: "Host application rejected.", type: "success" }));
+                broadcastSync('HOST_STATUS_UPDATED', { userId, status: 'rejected' });
                 fetchAllData();
             } else {
                 dispatch(setToast({ message: "Failed to reject host.", type: "error" }));
@@ -1072,19 +1127,62 @@ const AdminDashboard = () => {
 
                         <DataTable
                             columns={[
-                                { key: 'firstName', label: 'Name', sortable: true, render: (u) => <strong>{u.firstName} {u.lastName}</strong> },
+                                { 
+                                    key: 'firstName', 
+                                    label: 'Name', 
+                                    sortable: true, 
+                                    render: (u) => (
+                                        <div className="user-name-cell">
+                                            <strong>{u.firstName} {u.lastName}</strong>
+                                            {u._id === user?._id && (
+                                                <span className="current-user-tag">You</span>
+                                            )}
+                                        </div>
+                                    ) 
+                                },
                                 { key: 'email', label: 'Email', sortable: true },
-                                { key: 'role', label: 'Role', sortable: true, render: (u) => <span className={`status-badge-table ${u.role}`}>{u.role}</span> },
+                                { 
+                                    key: 'role', 
+                                    label: 'Role', 
+                                    sortable: true, 
+                                    render: (u) => <span className={`status-badge-table ${u.role}`}>{u.role}</span> 
+                                },
                                 {
                                     key: 'actions',
-                                    label: 'Actions',
-                                    render: (u) => u.role === 'user' ? (
-                                        <div className="table-actions">
-                                            <button className="primary" onClick={() => toggleUserVerification(u._id)}>Make Host</button>
-                                        </div>
-                                    ) : u.role === 'host' ? (
-                                        <span style={{ color: '#10b981', fontWeight: 700, fontSize: 13 }}>Host Active</span>
-                                    ) : '-'
+                                    label: 'Role Actions',
+                                    render: (u) => {
+                                        if (u.role === 'admin') {
+                                            return (
+                                                <span className="self-role-tag" title="System Administrator (Configured in .env)">
+                                                    Primary Administrator
+                                                </span>
+                                            );
+                                        }
+
+                                        const fullName = `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email;
+
+                                        return (
+                                            <div className="table-actions user-role-actions">
+                                                {u.role === 'host' ? (
+                                                    <button 
+                                                        className="role-action-btn demote-user-btn"
+                                                        onClick={() => handleRoleChangeRequest(u._id, 'user', fullName, 'host')}
+                                                        title="Convert role from Host to User"
+                                                    >
+                                                        Make User
+                                                    </button>
+                                                ) : (
+                                                    <button 
+                                                        className="role-action-btn make-host-btn"
+                                                        onClick={() => handleRoleChangeRequest(u._id, 'host', fullName, 'user')}
+                                                        title="Convert role from User to Host"
+                                                    >
+                                                        Make Host
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    }
                                 },
                             ]}
                             data={users.filter((u) => roleFilter === 'all' || u.role === roleFilter)}
@@ -1970,6 +2068,18 @@ const AdminDashboard = () => {
                 type="confirm"
                 onConfirm={deleteModalState.onConfirm}
                 onCancel={() => setDeleteModalState(prev => ({ ...prev, isOpen: false }))}
+            />
+            <ConfirmationModal
+                open={roleModalState.isOpen}
+                title={roleModalState.targetRole === 'host' ? "Confirm Host Promotion" : "Confirm Demote to User"}
+                message={
+                    roleModalState.targetRole === 'host'
+                        ? `Are you sure you want to promote ${roleModalState.userName} from USER to HOST? They will be granted permissions to list and manage properties.`
+                        : `Are you sure you want to convert ${roleModalState.userName} from HOST to regular USER? Their hosting privileges will be revoked.`
+                }
+                type="confirm"
+                onConfirm={confirmRoleChange}
+                onCancel={() => setRoleModalState(prev => ({ ...prev, isOpen: false }))}
             />
 
             {/* Modal for Review Details */}

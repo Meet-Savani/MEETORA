@@ -1943,6 +1943,98 @@
                 color: var(--text-color, #1e293b);
             }
         }
+
+        /* User Role Management Actions */
+        &.user-role-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: nowrap;
+
+            .role-action-btn {
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-weight: 700;
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                white-space: nowrap;
+                border: none;
+
+                &.make-host-btn {
+                    background: #dcfce7;
+                    color: #15803d;
+                    border: 1px solid rgba(22, 163, 74, 0.2);
+
+                    body[data-theme='dark'] & {
+                        background: rgba(34, 197, 94, 0.15);
+                        color: #4ade80;
+                        border-color: rgba(74, 222, 128, 0.3);
+                    }
+
+                    &:hover {
+                        background: #16a34a;
+                        color: #ffffff;
+                        box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
+                    }
+                }
+
+                &.demote-user-btn {
+                    background: #fef3c7;
+                    color: #b45309;
+                    border: 1px solid rgba(217, 119, 6, 0.2);
+
+                    body[data-theme='dark'] & {
+                        background: rgba(245, 158, 11, 0.15);
+                        color: #fbbf24;
+                        border-color: rgba(251, 191, 36, 0.3);
+                    }
+
+                    &:hover {
+                        background: #f59e0b;
+                        color: #ffffff;
+                        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+                    }
+                }
+            }
+        }
+    }
+
+    .self-role-tag {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        background: rgba(139, 92, 246, 0.12);
+        color: #7c3aed;
+        white-space: nowrap;
+
+        body[data-theme='dark'] & {
+            background: rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+        }
+    }
+
+    .user-name-cell {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .current-user-tag {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: #dbeafe;
+            color: #1e40af;
+            text-transform: uppercase;
+
+            body[data-theme='dark'] & {
+                background: rgba(59, 130, 246, 0.2);
+                color: #93c5fd;
+            }
+        }
     }
 
     /* Property Approvals Mobile Non-Overlapping Card Layout (Mobile Devices Only) */

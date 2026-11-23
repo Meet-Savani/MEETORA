@@ -33,6 +33,16 @@ router.post("/create", authenticate, authorize('host', 'admin'), async (req, res
             return res.status(400).json({ message: "At least one property photo is required." });
         }
 
+        // Deduplication safeguard: Prevent duplicate listings from rapid double-clicks
+        const recentDuplicate = await Listing.findOne({
+            creator: req.user._id,
+            title: title ? title.trim() : "",
+            createdAt: { $gte: new Date(Date.now() - 20000) }
+        });
+        if (recentDuplicate) {
+            return res.status(200).json(recentDuplicate);
+        }
+
         const listingPhotoPaths = await uploadMultipleToCloudinary(rawPhotos, 'dream_home/listings');
 
         let parsedAmenities = [];

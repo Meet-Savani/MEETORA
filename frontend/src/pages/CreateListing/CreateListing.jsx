@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom'
 import { apiPost } from '../../utils/api';
 import { fileToBase64 } from '../../utils/fileToBase64';
 import { setToast } from '../../redux/state';
+import { broadcastSync } from '../../utils/syncEvents';
 
 const CreateListing = () => {
 
@@ -129,6 +130,8 @@ const CreateListing = () => {
     const handlePost = async (e) => {
         e.preventDefault();
 
+        if (submitting) return;
+
         if (photos.length === 0) {
             dispatch(setToast({ message: "At least one property photo is required.", type: "error" }));
             return;
@@ -137,7 +140,7 @@ const CreateListing = () => {
         setSubmitting(true);
 
         try {
-            // Convert all selected photos to Base64 data strings for Cloudinary
+            // Convert all selected photos to Base64 data strings for Cloudinary (auto-compressed)
             const photoDataStrings = await Promise.all(
                 photos.map(p => fileToBase64(p.file || p))
             );
@@ -168,7 +171,8 @@ const CreateListing = () => {
             const data = await response.json();
 
             if (response.ok) {
-                dispatch(setToast({ message: "Property added successfully!", type: "success" }));
+                dispatch(setToast({ message: "Property added successfully and submitted for review!", type: "success" }));
+                broadcastSync('LISTING_CREATED', { listingId: data._id });
                 navigate('/');
             } else {
                 dispatch(setToast({ message: data.message || "Failed to create listing.", type: "error" }));
@@ -430,7 +434,13 @@ const CreateListing = () => {
                         </div>
                     </div>
 
-                    <button className='submit_btn' type='submit'>CREATE YOUR LISTING</button>
+                    <button 
+                        className={`submit_btn ${submitting ? 'submitting' : ''}`} 
+                        type='submit' 
+                        disabled={submitting}
+                    >
+                        {submitting ? 'CREATING YOUR LISTING...' : 'CREATE YOUR LISTING'}
+                    </button>
                 </form>
             </div>
         </div>

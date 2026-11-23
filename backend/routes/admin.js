@@ -22,9 +22,11 @@ router.get("/stats", async (req, res) => {
         await autoCompleteBookings();
         const totalUsers = await User.countDocuments({ role: "user" });
         const totalHosts = await User.countDocuments({ role: "host" });
+        const totalAdmins = await User.countDocuments({ role: "admin" });
         const userRoleStats = [
             { name: "Users", value: totalUsers },
-            { name: "Hosts", value: totalHosts }
+            { name: "Hosts", value: totalHosts },
+            { name: "Admins", value: totalAdmins }
         ];
         const uniqueCreators = await Listing.distinct("creator");
         const activeHostsCount = uniqueCreators.length;
@@ -188,32 +190,140 @@ router.get("/users", async (req, res) => {
     }
 });
 
-// 3. Toggle User Host Role
-router.patch("/users/:userId/verify", logAdminAction('PROMOTE_HOST', 'user'), async (req, res) => {
+// 3. Update User Role (User <-> Host only) - Admin Panel Exclusive
+router.patch("/users/:userId/role", logAdminAction('UPDATE_USER_ROLE', 'user'), async (req, res) => {
     try {
         const { userId } = req.params;
+        const { role } = req.body;
+
+        if (role === 'admin') {
+            return res.status(400).json({ 
+                message: "Security restriction: Meetora operates with a single platform administrator whose credentials are configured strictly in .env. No other users can be granted the administrator role." 
+            });
+        }
+
+        const validRoles = ["user", "host"];
+        if (!role || !validRoles.includes(role)) {
+            return res.status(400).json({ 
+                message: `Invalid role. Allowed roles are: ${validRoles.join(", ")}.` 
+            });
+        }
+
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: "User not found." });
         }
 
-        if (user.role === "host") {
-            return res.status(400).json({ message: "Host status cannot be revoked once granted." });
+        // Primary admin cannot be modified
+        if (user.role === 'admin' || user._id.toString() === req.user._id.toString()) {
+            return res.status(400).json({ 
+                message: "Security restriction: The primary administrator account cannot be modified." 
+            });
         }
 
-        user.role = "host";
+        const previousRole = user.role;
+        if (previousRole === role) {
+            return res.status(200).json({ 
+                user, 
+                message: `User is already assigned the '${role}' role.` 
+            });
+        }
+
+        user.role = role;
+
+        // Synchronize host application status
+        if (role === "host") {
+            user.hostRequestStatus = "approved";
+        } else {
+            user.hostRequestStatus = "none";
+        }
+
+        await user.save();
+
+        // Craft tailored notification
+        let notifTitle = "Account Role Updated";
+        let notifMessage = `Your account role has been updated to '${role}' by the administrator.`;
+        let notifType = "system";
+
+        if (role === "host") {
+            notifTitle = "You are now a Host!";
+            notifMessage = "Congratulations! You have been granted Host status by the administrator and can now list properties.";
+            notifType = "promo";
+        } else if (role === "user" && previousRole === "host") {
+            notifTitle = "Host Status Updated";
+            notifMessage = "Your account has been switched from Host to regular User by the administrator.";
+            notifType = "system";
+        }
+
+        await Notification.create({
+            userId: user._id,
+            title: notifTitle,
+            message: notifMessage,
+            type: notifType
+        });
+
+        const userObj = user.toObject();
+        delete userObj.password;
+
+        return res.status(200).json({ 
+            user: userObj, 
+            message: `User role successfully changed from '${previousRole}' to '${role}'.` 
+        });
+    } catch (error) {
+        console.error("Error updating user role:", error);
+        return res.status(500).json({ message: "Internal Server Error", error: error.message });
+    }
+});
+
+// 3b. Toggle User Host Role (legacy verify endpoint backward-compatibility)
+router.patch("/users/:userId/verify", logAdminAction('TOGGLE_USER_ROLE', 'user'), async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const targetRole = req.body?.role;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // If target role is explicitly provided, validate and apply
+        if (targetRole && ["user", "host", "admin"].includes(targetRole)) {
+            if (user._id.toString() === req.user._id.toString() && targetRole !== 'admin') {
+                return res.status(400).json({ message: "Security restriction: You cannot demote your own admin account." });
+            }
+            user.role = targetRole;
+            user.hostRequestStatus = targetRole === 'host' ? 'approved' : 'none';
+        } else {
+            // Otherwise toggle between host and user
+            if (user.role === "host") {
+                user.role = "user";
+                user.hostRequestStatus = "none";
+            } else {
+                user.role = "host";
+                user.hostRequestStatus = "approved";
+            }
+        }
+
         await user.save();
 
         await Notification.create({
             userId: user._id,
-            title: "You are now a Host!",
-            message: "Congratulations! You have been promoted to Host status by the administrator and can now host properties.",
-            type: "promo"
+            title: user.role === "host" ? "You are now a Host!" : "Account Role Updated",
+            message: user.role === "host"
+                ? "Congratulations! You have been promoted to Host status by the administrator."
+                : "Your account role has been updated to User by the administrator.",
+            type: user.role === "host" ? "promo" : "system"
         });
 
-        return res.status(200).json({ user, message: "User promoted to Host successfully." });
+        const userObj = user.toObject();
+        delete userObj.password;
+
+        return res.status(200).json({ 
+            user: userObj, 
+            message: `User role updated to '${user.role}' successfully.` 
+        });
     } catch (error) {
-        console.log(error);
+        console.error("Error toggling user role:", error);
         return res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
 });

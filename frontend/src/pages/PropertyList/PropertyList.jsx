@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { Edit, Delete, Archive, Unarchive, Add, FilterList, KeyboardArrowDown } from '@mui/icons-material';
 import { apiFetch, apiPost, apiPatch, apiDelete } from '../../utils/api';
 import ConfirmationModal from '../../components/ConfirmationModal/ConfirmationModal';
+import { broadcastSync, subscribeSync } from '../../utils/syncEvents';
 
 const PropertyList = () => {
     const navigate = useNavigate();
@@ -37,6 +38,20 @@ const PropertyList = () => {
 
     useEffect(() => {
         getPropertyList();
+
+        const unsubscribe = subscribeSync(() => {
+            getPropertyList();
+        });
+
+        const handleFocus = () => {
+            getPropertyList();
+        };
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            unsubscribe();
+            window.removeEventListener('focus', handleFocus);
+        };
     }, [user?._id]);
 
 
@@ -47,6 +62,7 @@ const PropertyList = () => {
             const data = await res.json();
             if (res.ok) {
                 dispatch(setToast({ message: data.message, type: 'success' }));
+                broadcastSync('PROPERTY_UPDATED');
                 getPropertyList();
             } else {
                 dispatch(setToast({ message: data.message || 'Failed to update.', type: 'error' }));
@@ -67,6 +83,7 @@ const PropertyList = () => {
             if (res.ok) {
                 dispatch(setToast({ message: data.message, type: 'success' }));
                 setDeleteModal({ open: false, propertyId: null, title: '' });
+                broadcastSync('PROPERTY_UPDATED');
                 getPropertyList();
             } else {
                 dispatch(setToast({ message: data.message || 'Failed to delete.', type: 'error' }));

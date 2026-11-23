@@ -8,6 +8,7 @@ import {
 import '../../styles/BecomeHost.scss';
 import { setUpdateUser, setToast } from '../../redux/state';
 import { apiFetch, apiPost } from '../../utils/api';
+import { broadcastSync } from '../../utils/syncEvents';
 
 const BENEFITS = [
     { icon: <TrendingUp />, title: 'Earn on your terms', desc: 'Set your own prices and availability.' },
@@ -72,6 +73,8 @@ const BecomeHost = () => {
 
     const handleSubmitApplication = async (e) => {
         e.preventDefault();
+        if (submitting) return;
+
         if (!phone.trim()) {
             dispatch(setToast({ message: "Phone number is required.", type: "error" }));
             return;
@@ -87,6 +90,7 @@ const BecomeHost = () => {
             if (res.ok && data.user) {
                 dispatch(setUpdateUser(data.user));
                 dispatch(setToast({ message: data.message || "Host request submitted!", type: "success" }));
+                broadcastSync('HOST_REQUEST_CREATED', { userId: user._id });
             } else {
                 dispatch(setToast({ message: data.message || "Failed to submit request.", type: "error" }));
             }

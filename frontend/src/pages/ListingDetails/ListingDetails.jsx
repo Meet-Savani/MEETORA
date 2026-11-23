@@ -746,7 +746,7 @@ const ListingDetails = () => {
                 <hr />
 
                 <div className="profile" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <div className="host-avatar-container" style={{ width: '56px', height: '56px', minWidth: '56px', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--primary-light-alpha, rgba(34, 197, 94, 0.25))', backgroundColor: '#f1f5f9', flexShrink: 0 }}>
+                    <div className="host-avatar-container" style={{ width: '56px', height: '56px', minWidth: '56px', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--primary-light-alpha, rgba(34, 197, 94, 0.25))', backgroundColor: 'var(--input-bg, #f1f5f9)', flexShrink: 0 }}>
                         {hostProfileImgUrl && !hostImgError ? (
                             <img 
                                 src={hostProfileImgUrl} 
@@ -1037,7 +1037,7 @@ const ListingDetails = () => {
                             {reviews.map((rev) => {
                                 const guestPhoto = resolveImageUrl(rev.customerId?.profileImagePath, "/assets/default.jpg");
                                 return (
-                                    <div key={rev._id} className="review-card" style={{ padding: '20px', border: '1px solid var(--border-color, #edf2f7)', borderRadius: '12px', background: 'var(--card-bg-color, #fff)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                                    <div key={rev._id} className="review-card" style={{ padding: '20px', border: '1px solid var(--border-color, #edf2f7)', borderRadius: '12px', background: 'var(--card-bg, #fff)', color: 'var(--text-color)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
                                         <div className="review-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                                             <img 
                                                 src={guestPhoto} 

@@ -9,6 +9,7 @@ import { apiFetch } from '../../utils/api';
 import { BACKEND_BASE_URL } from '../../config/constants';
 import { resolveImageUrl } from '../../utils/image';
 import { setReservationList } from '../../redux/state';
+import { subscribeSync } from '../../utils/syncEvents';
 
 const HostDashboard = () => {
     const dispatch = useDispatch();
@@ -93,6 +94,20 @@ const HostDashboard = () => {
         };
 
         fetchReservations();
+
+        const unsubscribe = subscribeSync(() => {
+            fetchReservations();
+        });
+
+        const handleFocus = () => {
+            fetchReservations();
+        };
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            unsubscribe();
+            window.removeEventListener('focus', handleFocus);
+        };
     }, [userId, user, navigate, dispatch]);
 
     const maxVal = Math.max(...weeklyEarnings, 100);
