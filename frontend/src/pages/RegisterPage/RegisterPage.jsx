@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { setLogin, setToast } from '../../redux/state';
 import { useDispatch } from 'react-redux';
@@ -18,18 +18,47 @@ const RegisterPage = () => {
         profileImage: null,
     });
 
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const fileInputRef = useRef(null);
+
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
     const passwordMatch = formData.password === formData.confirmPassword || formData.confirmPassword === "";
 
+    useEffect(() => {
+        if (!formData.profileImage) {
+            setPreviewUrl(null);
+            return;
+        }
+
+        const objectUrl = URL.createObjectURL(formData.profileImage);
+        setPreviewUrl(objectUrl);
+
+        return () => {
+            URL.revokeObjectURL(objectUrl);
+        };
+    }, [formData.profileImage]);
+
     const handleChange = (e) => {
         const { name, value, files } = e.target;
-        setFormData({
-            ...formData,
-            [name]: name === "profileImage" ? files[0] : value,
-        })
+        setFormData(prev => ({
+            ...prev,
+            [name]: name === "profileImage" ? (files && files[0] ? files[0] : null) : value,
+        }));
     }
+
+    const handleRemoveImage = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setFormData(prev => ({
+            ...prev,
+            profileImage: null,
+        }));
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -116,23 +145,53 @@ const RegisterPage = () => {
                         required />
 
                     {!passwordMatch && (
-                        <p style={{ color: "red" }}>Password do not match</p>
+                        <p className="password_mismatch_error">Passwords do not match</p>
                     )}
 
                     <input 
+                        ref={fileInputRef}
                         type="file"
                         id='image'
                         onChange={handleChange}
                         name='profileImage'
                         accept='image/*'
                         style={{ display: 'none' }} />
-                    <label htmlFor='image'>
-                        <img src="/assets/addImage.png" alt="Add Profile Photo" />
-                        <p>Upload Your Photo (Optional)</p>
-                    </label>
-                    {formData.profileImage && (
-                        <img src={URL.createObjectURL(formData.profileImage)} alt={formData.firstName + " " + formData.lastName}
-                        style={{ maxWidth: "80px" }} />
+                    
+                    {formData.profileImage && previewUrl ? (
+                        <div className="register_profile_preview">
+                            <img 
+                                src={previewUrl} 
+                                alt={formData.firstName ? `${formData.firstName} ${formData.lastName}` : "Profile Preview"}
+                                className="register_profile_preview_img" 
+                            />
+                            <div className="register_profile_preview_info">
+                                <span className="file_name">
+                                    {formData.profileImage.name ? (
+                                        formData.profileImage.name.length > 20 
+                                            ? `${formData.profileImage.name.substring(0, 18)}...`
+                                            : formData.profileImage.name
+                                    ) : "Photo selected"}
+                                </span>
+                                <div className="preview_buttons">
+                                    <label htmlFor='image' className="change_photo_label">
+                                        Change
+                                    </label>
+                                    <span className="divider">•</span>
+                                    <button 
+                                        type="button" 
+                                        onClick={handleRemoveImage} 
+                                        className="remove_photo_btn"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <label htmlFor='image' className="register_upload_label">
+                            <img src="/assets/addImage.png" alt="Add Profile Photo" />
+                            <p>Upload Your Photo (Optional)</p>
+                        </label>
                     )}
 
                     <button type='submit' disabled={!passwordMatch}>REGISTER</button>
