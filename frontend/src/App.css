@@ -57,6 +57,11 @@ button {
   font-size: var(--font-sm);
 }
 
+/* Ensure dropdown select text never overlaps dropdown arrow icons across the website */
+select {
+  padding-right: 28px;
+}
+
 /* Global overflow-x prevention for all devices */
 html,
 body {

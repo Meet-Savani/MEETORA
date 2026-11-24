@@ -294,6 +294,13 @@
                 padding-top: 4px !important;
                 height: 48px !important;
                 align-items: center !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+
+                @media (max-width: 480px) {
+                    padding: 2px 0 !important;
+                    height: 42px !important;
+                }
             }
 
             .rdrMonthName {
@@ -307,6 +314,20 @@
                 border: 1px solid var(--border-color, #e2e8f0) !important;
                 border-radius: 6px !important;
                 transition: all 0.2s ease !important;
+                width: 28px !important;
+                height: 28px !important;
+                margin: 0 4px !important;
+                padding: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                flex-shrink: 0 !important;
+
+                @media (max-width: 480px) {
+                    width: 26px !important;
+                    height: 26px !important;
+                    margin: 0 2px !important;
+                }
 
                 &:hover {
                     background: var(--primary-color, $green) !important;
@@ -334,19 +355,130 @@
                 }
             }
 
-            .rdrMonthAndYearPickers select {
-                color: var(--text-color) !important;
-                background-color: var(--input-bg, #f8fafc) !important;
-                border: 1px solid var(--border-color, #e2e8f0) !important;
-                border-radius: 6px !important;
-                padding: 4px 8px !important;
+            .rdrMonthAndYearPickers {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: clamp(4px, 1.5vw, 8px) !important;
                 font-weight: 600 !important;
-                cursor: pointer !important;
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
 
-                body[data-theme='dark'] & {
-                    background-color: var(--input-bg) !important;
-                    border-color: var(--border-color) !important;
-                    color: var(--text-color) !important;
+                .rdrMonthPicker,
+                .rdrYearPicker {
+                    margin: 0 !important;
+                    display: inline-flex !important;
+                    align-items: center !important;
+                }
+
+                .rdrMonthPicker {
+                    flex: 0 1 auto !important;
+                }
+
+                .rdrYearPicker {
+                    flex: 0 1 auto !important;
+                }
+
+                select {
+                    appearance: none !important;
+                    -webkit-appearance: none !important;
+                    -moz-appearance: none !important;
+                    color: var(--text-color, #1e293b) !important;
+                    background-color: var(--input-bg, #f8fafc) !important;
+                    border: 1px solid var(--border-color, #e2e8f0) !important;
+                    border-radius: 8px !important;
+                    padding: 6px 32px 6px 12px !important;
+                    font-size: 14px !important;
+                    font-weight: 600 !important;
+                    cursor: pointer !important;
+                    outline: none !important;
+                    text-align: left !important;
+                    text-align-last: left !important;
+                    white-space: nowrap !important;
+                    line-height: 1.4 !important;
+                    height: 36px !important;
+                    box-sizing: border-box !important;
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+                    background-repeat: no-repeat !important;
+                    background-position: right 10px center !important;
+                    background-size: 10px 6px !important;
+                    transition: all 0.2s ease !important;
+
+                    &:hover {
+                        border-color: var(--primary-color, $green) !important;
+                        background-color: var(--card-bg, #ffffff) !important;
+                    }
+
+                    &:focus {
+                        border-color: var(--primary-color, $green) !important;
+                        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15) !important;
+                    }
+
+                    option {
+                        background-color: var(--card-bg, #ffffff) !important;
+                        color: var(--text-color, #1e293b) !important;
+                        padding: 6px 10px !important;
+                    }
+
+                    body[data-theme='dark'] & {
+                        background-color: var(--input-bg, #1e293b) !important;
+                        border-color: var(--border-color, #334155) !important;
+                        color: var(--text-color, #f8fafc) !important;
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2394a3b8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+
+                        option {
+                            background-color: #1e293b !important;
+                            color: #f8fafc !important;
+                        }
+
+                        &:hover {
+                            background-color: #243247 !important;
+                        }
+                    }
+
+                    @media (max-width: 480px) {
+                        height: clamp(30px, 8.5vw, 34px) !important;
+                        font-size: clamp(11.5px, 3.2vw, 13.5px) !important;
+                        padding: 4px clamp(22px, 6vw, 26px) 4px clamp(8px, 2.2vw, 10px) !important;
+                        background-position: right clamp(6px, 1.8vw, 9px) center !important;
+                        background-size: 8px 5px !important;
+                        border-radius: 6px !important;
+                    }
+
+                    @media (max-width: 360px) {
+                        font-size: 11px !important;
+                        padding: 3px 20px 3px 6px !important;
+                        background-position: right 5px center !important;
+                        background-size: 7px 4.5px !important;
+                    }
+                }
+
+                .rdrMonthPicker select {
+                    min-width: 124px !important;
+                    width: auto !important;
+
+                    @media (max-width: 480px) {
+                        min-width: clamp(88px, 28vw, 115px) !important;
+                        max-width: 130px !important;
+                    }
+
+                    @media (max-width: 360px) {
+                        min-width: 82px !important;
+                    }
+                }
+
+                .rdrYearPicker select {
+                    min-width: 86px !important;
+                    width: auto !important;
+
+                    @media (max-width: 480px) {
+                        min-width: clamp(66px, 20vw, 78px) !important;
+                        max-width: 85px !important;
+                    }
+
+                    @media (max-width: 360px) {
+                        min-width: 60px !important;
+                    }
                 }
             }
 
@@ -804,20 +936,28 @@
 
                         .actions {
                             display: flex;
+                            align-items: center;
                             gap: 6px;
 
                             button {
-                                display: flex;
+                                display: inline-flex;
                                 align-items: center;
                                 justify-content: center;
-                                width: 28px;
+                                gap: 4px;
+                                min-width: 28px;
+                                width: auto;
                                 height: 28px;
+                                padding: 4px 10px;
                                 border: none;
                                 border-radius: 6px;
+                                font-size: 12px;
+                                font-weight: 600;
                                 cursor: pointer;
                                 transition: all 0.2s ease;
+                                white-space: nowrap;
 
-                                &.edit-btn {
+                                &.edit-btn,
+                                &.btn-edit {
                                     background-color: rgba(0,0,0,0.05);
                                     color: var(--text-color);
                                     
@@ -831,7 +971,8 @@
                                     }
                                 }
 
-                                &.delete-btn {
+                                &.delete-btn,
+                                &.btn-delete {
                                     background-color: rgba(255, 77, 77, 0.1);
                                     color: #ff4d4d;
 

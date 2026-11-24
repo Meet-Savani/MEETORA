@@ -762,7 +762,7 @@
         width: 100%;
         select.mobile-category-select {
             width: 100%;
-            padding: 10px 14px;
+            padding: 10px 32px 10px 14px;
             border-radius: 8px;
             border: 1px solid var(--border-color, #eaeaea);
             background: var(--card-bg, #fff);
@@ -822,7 +822,7 @@
     }
 
     .sort-select {
-        padding: 10px 14px;
+        padding: 10px 32px 10px 14px;
         border-radius: 8px;
         border: 1px solid var(--border-color, #eaeaea);
         background: var(--card-bg, #fff);
