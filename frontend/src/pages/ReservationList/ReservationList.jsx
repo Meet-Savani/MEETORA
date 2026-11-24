@@ -247,7 +247,7 @@ const ReservationList = () => {
                                     <div className="dates-info">
                                         <CalendarMonth sx={{ fontSize: "18px", color: "var(--text-color)" }} />
                                         <span>
-                                            {new Date(startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} - {new Date(endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            {new Date(startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} - {new Date(endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} ({reservation.dayCount || Math.max(1, Math.round((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)))} {(reservation.dayCount || Math.max(1, Math.round((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)))) > 1 ? 'nights' : 'night'})
                                         </span>
                                     </div>
 

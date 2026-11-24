@@ -144,6 +144,8 @@ router.post("/create", authenticate, async (req, res) => {
 
         const start = new Date(startDate);
         const end = new Date(endDate);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -151,23 +153,25 @@ router.post("/create", authenticate, async (req, res) => {
         maxBookingDate.setFullYear(maxBookingDate.getFullYear() + 2);
         maxBookingDate.setHours(23, 59, 59, 999);
 
-        if (start < today || end < today) {
-            return res.status(400).json({ message: "Booking dates cannot be in the past." });
+        if (start < today) {
+            return res.status(400).json({ message: "Check-in date cannot be in the past." });
         }
 
         if (start > maxBookingDate || end > maxBookingDate) {
             return res.status(400).json({ message: "Booking dates cannot be more than 2 years in the future." });
         }
 
-        if (end < start) {
-            return res.status(400).json({ message: "End date cannot be before start date." });
+        if (end <= start) {
+            return res.status(400).json({ message: "Check-out date must be after check-in date (minimum 1 night stay)." });
         }
 
         const existingBookings = await Booking.find({ listingId, status: { $nin: ["cancelled", "rejected"] } });
         const overlappingBooking = existingBookings.find(booking => {
             const bStart = new Date(booking.startDate);
             const bEnd = new Date(booking.endDate);
-            return start <= bEnd && end >= bStart;
+            bStart.setHours(0, 0, 0, 0);
+            bEnd.setHours(0, 0, 0, 0);
+            return start < bEnd && end > bStart;
         });
 
         if (overlappingBooking) {
@@ -177,14 +181,19 @@ router.post("/create", authenticate, async (req, res) => {
         const hasBlockedOverlap = listing.unavailableDates.some(range => {
             const blockStart = new Date(range.startDate);
             const blockEnd = new Date(range.endDate);
-            return start <= blockEnd && end >= blockStart;
+            blockStart.setHours(0, 0, 0, 0);
+            blockEnd.setHours(0, 0, 0, 0);
+            return start < blockEnd && end > blockStart;
         });
 
         if (hasBlockedOverlap) {
             return res.status(400).json({ message: "Selected dates overlap with owner-blocked/unavailable dates." });
         }
 
-        const dayCount = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        // Accommodation is priced per NIGHT (check-out date minus check-in date)
+        const diffMs = end.getTime() - start.getTime();
+        const nights = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)));
+        const dayCount = nights;
         let basePrice = listing.price * dayCount;
         let discountAmount = 0;
 
@@ -252,6 +261,7 @@ router.post("/create", authenticate, async (req, res) => {
             listingId,
             startDate,
             endDate,
+            dayCount,
             totalPrice,
             status,
             couponCode: couponCode || "",
@@ -520,29 +530,23 @@ router.get("/:bookingId/invoice", authenticate, isBookingParticipant, async (req
         doc.fillColor("#0f172a").fontSize(11).text(booking.listingId?.title || 'Listing Stay', 160, stayY + 28, { width: 180, height: 15, ellipsis: true });
         doc.fillColor("#475569").fontSize(10).text(`${booking.listingId?.city || ''}, ${booking.listingId?.country || ''}`, 160, stayY + 45);
 
-        const nights = Math.max(1, Math.round((new Date(booking.endDate) - new Date(booking.startDate)) / (1000 * 60 * 60 * 24))) || 1;
-        const discount = booking.discountAmount || 0;
-        const subTotal = booking.listingId?.price 
-            ? Math.round(booking.listingId.price * nights * 100) / 100
-            : Math.round(((booking.totalPrice || 0) + discount) * 100) / 100;
-        const ratePerNight = booking.listingId?.price || Math.round((subTotal / nights) * 100) / 100;
-        const netRent = Math.max(0, Math.round((subTotal - discount) * 100) / 100);
-
-        // SGST & CGST added into rent
-        let sgst = 0;
-        let cgst = 0;
-        let finalTotal = 0;
-
-        if (booking.totalPrice && booking.totalPrice > netRent) {
-            const taxDiff = Math.round((booking.totalPrice - netRent) * 100) / 100;
-            sgst = Math.round((taxDiff / 2) * 100) / 100;
-            cgst = Math.round((taxDiff - sgst) * 100) / 100;
-            finalTotal = booking.totalPrice;
-        } else {
-            sgst = Math.round((netRent * 0.09) * 100) / 100;
-            cgst = Math.round((netRent * 0.09) * 100) / 100;
-            finalTotal = Math.round((netRent + sgst + cgst) * 100) / 100;
+        const rawNights = Math.max(1, Math.round((new Date(booking.endDate) - new Date(booking.startDate)) / (1000 * 60 * 60 * 24))) || 1;
+        let nights = booking.dayCount || rawNights;
+        if (!booking.dayCount && booking.listingId?.price && booking.totalPrice) {
+            const netPaid = Math.round((booking.totalPrice / 1.18) * 100) / 100;
+            const impliedNights = Math.round(netPaid / booking.listingId.price);
+            if (impliedNights > 0 && Math.abs(impliedNights - nights) === 1) {
+                nights = impliedNights;
+            }
         }
+
+        const discount = booking.discountAmount || 0;
+        const ratePerNight = booking.listingId?.price || (nights > 0 ? Math.round(((booking.totalPrice || 0) / nights) * 100) / 100 : 0);
+        const subTotal = Math.round(ratePerNight * nights * 100) / 100;
+        const netRent = Math.max(0, Math.round((subTotal - discount) * 100) / 100);
+        const sgst = Math.round(netRent * 0.09 * 100) / 100;
+        const cgst = Math.round(netRent * 0.09 * 100) / 100;
+        const finalTotal = booking.totalPrice || Math.round((netRent + sgst + cgst) * 100) / 100;
 
         doc.fillColor("#475569").fontSize(9).text("STAY SCHEDULE", 360, stayY + 15);
         doc.fillColor("#0f172a").fontSize(11).text(`${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}`, 360, stayY + 28);

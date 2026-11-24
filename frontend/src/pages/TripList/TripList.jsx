@@ -189,29 +189,23 @@ const TripList = () => {
     // Download / Print Invoice
     const handleDownloadInvoice = (trip) => {
         const printWindow = window.open("", "_blank");
-        const nights = Math.max(1, Math.round((new Date(trip.endDate) - new Date(trip.startDate)) / (1000 * 60 * 60 * 24))) || 1;
-        const discount = trip.discountAmount || 0;
-        const subTotal = trip.listingId?.price 
-            ? Math.round(trip.listingId.price * nights * 100) / 100
-            : Math.round(((trip.totalPrice || 0) + discount) * 100) / 100;
-        const ratePerNight = trip.listingId?.price || Math.round((subTotal / nights) * 100) / 100;
-        const netRent = Math.max(0, Math.round((subTotal - discount) * 100) / 100);
-
-        // SGST & CGST added into rent
-        let sgst = 0;
-        let cgst = 0;
-        let finalTotal = 0;
-
-        if (trip.totalPrice && trip.totalPrice > netRent) {
-            const taxDiff = Math.round((trip.totalPrice - netRent) * 100) / 100;
-            sgst = Math.round((taxDiff / 2) * 100) / 100;
-            cgst = Math.round((taxDiff - sgst) * 100) / 100;
-            finalTotal = trip.totalPrice;
-        } else {
-            sgst = Math.round((netRent * 0.09) * 100) / 100;
-            cgst = Math.round((netRent * 0.09) * 100) / 100;
-            finalTotal = Math.round((netRent + sgst + cgst) * 100) / 100;
+        const rawNights = Math.max(1, Math.round((new Date(trip.endDate) - new Date(trip.startDate)) / (1000 * 60 * 60 * 24))) || 1;
+        let nights = trip.dayCount || rawNights;
+        if (!trip.dayCount && trip.listingId?.price && trip.totalPrice) {
+            const netPaid = Math.round((trip.totalPrice / 1.18) * 100) / 100;
+            const impliedNights = Math.round(netPaid / trip.listingId.price);
+            if (impliedNights > 0 && Math.abs(impliedNights - nights) === 1) {
+                nights = impliedNights;
+            }
         }
+
+        const discount = trip.discountAmount || 0;
+        const ratePerNight = trip.listingId?.price || (nights > 0 ? Math.round(((trip.totalPrice || 0) / nights) * 100) / 100 : 0);
+        const subTotal = Math.round(ratePerNight * nights * 100) / 100;
+        const netRent = Math.max(0, Math.round((subTotal - discount) * 100) / 100);
+        const sgst = Math.round(netRent * 0.09 * 100) / 100;
+        const cgst = Math.round(netRent * 0.09 * 100) / 100;
+        const finalTotal = trip.totalPrice || Math.round((netRent + sgst + cgst) * 100) / 100;
 
         printWindow.document.write(`
             <html>
@@ -434,7 +428,7 @@ const TripList = () => {
                                     <div className="dates-info">
                                         <CalendarMonth sx={{ fontSize: "16px", color: "var(--text-color)" }} />
                                         <span>
-                                            {new Date(startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} - {new Date(endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            {new Date(startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} - {new Date(endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} ({trip.dayCount || Math.max(1, Math.round((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)))} {(trip.dayCount || Math.max(1, Math.round((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)))) > 1 ? 'nights' : 'night'})
                                         </span>
                                     </div>
 

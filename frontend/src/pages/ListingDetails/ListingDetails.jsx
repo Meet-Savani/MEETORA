@@ -166,10 +166,14 @@ const ListingDetails = () => {
     }, []);
 
     // Booking Calendar 
+    const defaultStart = new Date();
+    const defaultEnd = new Date();
+    defaultEnd.setDate(defaultStart.getDate() + 1);
+
     const [dateRange, setDateRange] = useState([
         {
-            startDate: new Date(),
-            endDate: new Date(),
+            startDate: defaultStart,
+            endDate: defaultEnd,
             key: "selection",
         }
     ]);
@@ -181,16 +185,24 @@ const ListingDetails = () => {
 
     const start = new Date(dateRange[0].startDate);
     const end = new Date(dateRange[0].endDate);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
 
-    let dayCount = 1;
+    const diffTime = end.getTime() - start.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    // Number of nights is the difference between check-out and check-in (minimum 1 night)
+    const dayCount = Math.max(1, diffDays);
+
+    const effectiveCheckoutDate = (end <= start)
+        ? new Date(start.getTime() + 86400000)
+        : end;
+
     let baseRent = 0;
     let sgst = 0;
     let cgst = 0;
     let totalPrice = 0;
 
     if (listing) {
-        dayCount = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
-        if (dayCount < 1) dayCount = 1;
         baseRent = listing.price * dayCount;
         sgst = Math.round(baseRent * 0.09 * 100) / 100;
         cgst = Math.round(baseRent * 0.09 * 100) / 100;
@@ -206,7 +218,7 @@ const ListingDetails = () => {
 
         const dates = [];
         let current = new Date(start);
-        while (current <= end) {
+        while (current < end) {
             dates.push(new Date(current));
             current.setDate(current.getDate() + 1);
         }
@@ -422,10 +434,9 @@ const ListingDetails = () => {
             return;
         }
 
-        if (bookingEnd < bookingStart) {
-            showCustomAlert("End date cannot be before start date.", "Validation Error");
-            return;
-        }
+        const effectiveEnd = (bookingEnd <= bookingStart)
+            ? new Date(bookingStart.getTime() + 86400000)
+            : new Date(bookingEnd);
 
         const overlapsBookings = bookings.some(booking => {
             if (booking.status === "cancelled" || booking.status === "rejected") {
@@ -433,7 +444,9 @@ const ListingDetails = () => {
             }
             const bStart = new Date(booking.startDate);
             const bEnd = new Date(booking.endDate);
-            return bookingStart <= bEnd && bookingEnd >= bStart;
+            bStart.setHours(0, 0, 0, 0);
+            bEnd.setHours(0, 0, 0, 0);
+            return bookingStart < bEnd && effectiveEnd > bStart;
         });
 
         if (overlapsBookings) {
@@ -444,7 +457,9 @@ const ListingDetails = () => {
         const overlapsBlocked = (listing.unavailableDates || []).some(range => {
             const blockStart = new Date(range.startDate);
             const blockEnd = new Date(range.endDate);
-            return bookingStart <= blockEnd && bookingEnd >= blockStart;
+            blockStart.setHours(0, 0, 0, 0);
+            blockEnd.setHours(0, 0, 0, 0);
+            return bookingStart < blockEnd && effectiveEnd > blockStart;
         });
 
         if (overlapsBlocked) {
@@ -458,7 +473,7 @@ const ListingDetails = () => {
                 listingId,
                 hostId: listing.creator._id || listing.creator,
                 startDate: dateRange[0].startDate.toDateString(),
-                endDate: dateRange[0].endDate.toDateString(),
+                endDate: effectiveEnd.toDateString(),
                 totalPrice: totalPrice,
                 dayCount: dayCount
             };
@@ -852,14 +867,14 @@ const ListingDetails = () => {
                                         <div className="date-field">
                                             <span className="date-label">Check-out</span>
                                             <span className="date-value">
-                                                {dateRange[0].endDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                                {effectiveCheckoutDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                                             </span>
                                         </div>
                                     </div>
 
                                     <div className="price-breakdown">
                                         <div className="breakdown-row">
-                                            <span>Base Rent ({formatPrice(listing.price)} × {dayCount}d)</span>
+                                            <span>Base Rent ({formatPrice(listing.price)} × {dayCount} {dayCount > 1 ? "nights" : "night"})</span>
                                             <span className="breakdown-val">{formatPrice(baseRent)}</span>
                                         </div>
                                         <div className="breakdown-row tax-row">

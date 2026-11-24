@@ -1570,7 +1570,7 @@ const AdminDashboard = () => {
                                         <strong>{b.listingId?.title}</strong>
                                         <br />
                                         <small style={{ color: 'var(--secondary-text-color)' }}>
-                                            {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()}
+                                            {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()} ({b.dayCount || Math.max(1, Math.round((new Date(b.endDate) - new Date(b.startDate)) / (1000 * 60 * 60 * 24)))} {(b.dayCount || Math.max(1, Math.round((new Date(b.endDate) - new Date(b.startDate)) / (1000 * 60 * 60 * 24)))) > 1 ? 'nights' : 'night'})
                                         </small>
                                     </div>
                                 )},
