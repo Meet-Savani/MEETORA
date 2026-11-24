@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import '../../styles/Login.scss'
 import { setLogin, setToast } from '../../redux/state';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { ErrorOutline } from '@mui/icons-material';
 
 import { BACKEND_BASE_URL } from '../../config/constants';
 
@@ -10,20 +11,29 @@ const LoginPage = () => {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const location = useLocation();
 
+    // Clear any residual toast when mounting login page
+    useEffect(() => {
+        dispatch(setToast(null));
+    }, [dispatch]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError("");
 
         const cleanEmail = email.trim();
         if (!cleanEmail || !password) {
-            dispatch(setToast({ message: "Please enter both email and password.", type: "error" }));
+            setError("Please enter both email and password.");
             return;
         }
 
+        setLoading(true);
         try {
             const response = await fetch(`${BACKEND_BASE_URL}/auth/login`, {
                 method: "POST",
@@ -35,7 +45,9 @@ const LoginPage = () => {
 
             const data = await response.json();
 
-            if(response.ok && data) {
+            if (response.ok && data) {
+                setError("");
+                dispatch(setToast(null));
                 dispatch(
                     setLogin({
                         user: data.user,
@@ -45,11 +57,13 @@ const LoginPage = () => {
                 const from = location.state?.from || (data.user.role === 'admin' ? "/admin/dashboard" : "/");
                 navigate(from, { replace: true });
             } else {
-                dispatch(setToast({ message: data.message || "Invalid email or password", type: "error" }));
+                setError(data?.message || "Invalid email or password");
             }
-        } catch (error) {
-            console.log("Login failed", error.message);
-            dispatch(setToast({ message: "Unable to connect to the server. Please try again.", type: "error" }));
+        } catch (err) {
+            console.error("Login failed:", err.message);
+            setError("Unable to connect to the server. Please try again.");
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -61,16 +75,31 @@ const LoginPage = () => {
                         type="email" 
                         placeholder='Email'
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                            setEmail(e.target.value);
+                            if (error) setError("");
+                        }}
                         required />
                     <input
                         type="password" 
                         placeholder='Password'
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                            setPassword(e.target.value);
+                            if (error) setError("");
+                        }}
                         required />
+
+                    {error && (
+                        <div className="login_error_line" role="alert">
+                            <ErrorOutline sx={{ fontSize: 18 }} />
+                            <span>{error}</span>
+                        </div>
+                    )}
                     
-                    <button type="submit">LOGIN</button>
+                    <button type="submit" disabled={loading}>
+                        {loading ? "LOGGING IN..." : "LOGIN"}
+                    </button>
                 </form>
                 <Link to="/register">Don't have an account? Sign In Here</Link>
             </div>

@@ -36,8 +36,15 @@ export const apiFetch = async (path, options = {}) => {
     });
 
     if (response.status === 401) {
+        const hadToken = Boolean(getAuthToken());
         store.dispatch(setLogout());
-        store.dispatch(setToast({ message: 'Session expired. Please log in again.', type: 'error' }));
+        const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+        const isAuthPage = currentPath === '/login' || currentPath === '/register';
+        // Only trigger session expired toast if the user was actively logged in with a token
+        // and is not currently on an authentication page
+        if (hadToken && !isAuthPage) {
+            store.dispatch(setToast({ message: 'Session expired. Please log in again.', type: 'error' }));
+        }
     }
 
     return response;

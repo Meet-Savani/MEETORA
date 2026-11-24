@@ -64,8 +64,10 @@
     .col-value {
         display: inline-block;
         max-width: 100%;
-        overflow-wrap: anywhere;
+        overflow-wrap: break-word;
         word-break: normal;
+        white-space: normal;
+        hyphens: none;
     }
 
     thead {
@@ -273,7 +275,9 @@
 .cell-text-wrap {
     max-width: 250px;
     white-space: normal;
-    word-break: break-word;
+    word-break: normal;
+    overflow-wrap: break-word;
+    hyphens: none;
     font-size: 13px;
     line-height: 1.4;
 }
@@ -471,6 +475,8 @@
                         flex-shrink: 0;
                         max-width: 45%;
                         overflow-wrap: break-word;
+                        word-break: normal;
+                        hyphens: none;
                     }
 
                     .col-value {
@@ -483,8 +489,10 @@
                         flex: 1;
                         font-size: 13.5px;
                         min-width: 0;
-                        overflow-wrap: anywhere;
-                        word-break: break-word;
+                        overflow-wrap: break-word;
+                        word-break: normal;
+                        white-space: normal;
+                        hyphens: none;
 
                         /* Buttons inside actions cell */
                         button {

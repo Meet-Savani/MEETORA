@@ -5,6 +5,7 @@ import MainLayout from './layouts/MainLayout'
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute'
 import { apiPost } from './utils/api'
 import ScrollToTop from './components/ScrollToTop'
+import Toast from './components/Toast/Toast'
 import Loader from './components/Loader/Loader'
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary'
 import { useDispatch, useSelector } from 'react-redux'
@@ -84,6 +85,7 @@ function App() {
       <BrowserRouter>
         <SpaRedirectHandler />
         <ScrollToTop />
+        <Toast />
         <ErrorBoundary>
           <Suspense fallback={<Loader />}>
             <Routes>

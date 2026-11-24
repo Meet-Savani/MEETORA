@@ -503,11 +503,21 @@ router.put("/settings", logAdminAction('UPDATE_SETTINGS', 'settings'), async (re
 // 11. Get Coupons
 router.get("/coupons", async (req, res) => {
     try {
-        // Auto-deactivate any coupons whose quantity/usage limit has been filled up
+        // Auto-deactivate any coupons whose quantity/usage limit has been filled up or end date has fully passed
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+
         await Coupon.updateMany(
             {
-                usageLimit: { $ne: null },
-                $expr: { $gte: ["$usageCount", "$usageLimit"] },
+                $or: [
+                    {
+                        usageLimit: { $ne: null },
+                        $expr: { $gte: ["$usageCount", "$usageLimit"] }
+                    },
+                    {
+                        endDate: { $lt: startOfToday }
+                    }
+                ],
                 isActive: true
             },
             { $set: { isActive: false } }

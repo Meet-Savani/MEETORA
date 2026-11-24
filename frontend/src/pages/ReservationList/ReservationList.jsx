@@ -12,6 +12,7 @@ import useCurrency from '../../hooks/useCurrency';
 import { apiFetch, apiPatch, openAuthenticatedPdf } from '../../utils/api';
 import { BACKEND_BASE_URL } from '../../config/constants';
 import { resolveImageUrl } from '../../utils/image';
+import { calculateBookingNights } from '../../utils/bookingHelper';
 
 const ReservationList = () => {
     const navigate = useNavigate();
@@ -247,7 +248,10 @@ const ReservationList = () => {
                                     <div className="dates-info">
                                         <CalendarMonth sx={{ fontSize: "18px", color: "var(--text-color)" }} />
                                         <span>
-                                            {new Date(startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} - {new Date(endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} ({reservation.dayCount || Math.max(1, Math.round((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)))} {(reservation.dayCount || Math.max(1, Math.round((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)))) > 1 ? 'nights' : 'night'})
+                                            {(() => {
+                                                const nights = calculateBookingNights(reservation);
+                                                return `${new Date(startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} - ${new Date(endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} (${nights} ${nights > 1 ? 'nights' : 'night'})`;
+                                            })()}
                                         </span>
                                     </div>
 

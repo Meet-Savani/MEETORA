@@ -9,7 +9,7 @@ const Toast = () => {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        if (toast) {
+        if (toast && toast.message) {
             const timer = setTimeout(() => {
                 dispatch(setToast(null));
             }, 3500);
@@ -17,7 +17,7 @@ const Toast = () => {
         }
     }, [toast, dispatch]);
 
-    if (!toast) return null;
+    if (!toast || !toast.message) return null;
 
     const getIcon = () => {
         switch (toast.type) {

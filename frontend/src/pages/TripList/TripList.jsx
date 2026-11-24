@@ -8,6 +8,7 @@ import useCurrency from '../../hooks/useCurrency';
 import { apiFetch, apiPatch, apiPost, apiPut, apiDelete, openAuthenticatedPdf } from '../../utils/api';
 import { BACKEND_BASE_URL } from '../../config/constants';
 import { resolveImageUrl } from '../../utils/image';
+import { calculateBookingNights } from '../../utils/bookingHelper';
 
 const TripList = () => {
     const userId = useSelector((state) => state.user.user?._id);
@@ -189,19 +190,16 @@ const TripList = () => {
     // Download / Print Invoice
     const handleDownloadInvoice = (trip) => {
         const printWindow = window.open("", "_blank");
-        const rawNights = Math.max(1, Math.round((new Date(trip.endDate) - new Date(trip.startDate)) / (1000 * 60 * 60 * 24))) || 1;
-        let nights = trip.dayCount || rawNights;
-        if (!trip.dayCount && trip.listingId?.price && trip.totalPrice) {
-            const netPaid = Math.round((trip.totalPrice / 1.18) * 100) / 100;
-            const impliedNights = Math.round(netPaid / trip.listingId.price);
-            if (impliedNights > 0 && Math.abs(impliedNights - nights) === 1) {
-                nights = impliedNights;
-            }
-        }
-
-        const discount = trip.discountAmount || 0;
-        const ratePerNight = trip.listingId?.price || (nights > 0 ? Math.round(((trip.totalPrice || 0) / nights) * 100) / 100 : 0);
-        const subTotal = Math.round(ratePerNight * nights * 100) / 100;
+        const nights = calculateBookingNights(trip);
+        const discount = Number(trip.discountAmount || 0);
+        const ratePerNight = (trip.pricePerNight !== undefined && trip.pricePerNight !== null && Number(trip.pricePerNight) > 0)
+            ? Number(trip.pricePerNight)
+            : (trip.listingId && trip.listingId.price !== undefined
+                ? Number(trip.listingId.price)
+                : (nights > 0 ? Math.round((((trip.totalPrice || 0) / 1.18 + discount) / nights) * 100) / 100 : 0));
+        const subTotal = (trip.subTotal && Number(trip.subTotal) > 0)
+            ? Number(trip.subTotal)
+            : Math.round(ratePerNight * nights * 100) / 100;
         const netRent = Math.max(0, Math.round((subTotal - discount) * 100) / 100);
         const sgst = Math.round(netRent * 0.09 * 100) / 100;
         const cgst = Math.round(netRent * 0.09 * 100) / 100;

@@ -37,7 +37,6 @@ const EditListing = () => {
 
     const [category, setCategory] = useState("");
     const [type, setType] = useState("");
-    const [bookingType, setBookingType] = useState("instant");
 
     // Location
     const [formLocation, setFormLocation] = useState({
@@ -96,7 +95,6 @@ const EditListing = () => {
 
                 setCategory(listing.category || "");
                 setType(listing.type || "");
-                setBookingType(listing.bookingType || "instant");
 
                 setFormLocation({
                     streetAddress: listing.streetAddress || "",
@@ -248,7 +246,6 @@ const EditListing = () => {
             const payload = {
                 category,
                 type,
-                bookingType,
                 streetAddress: formLocation.streetAddress,
                 aptSuite: formLocation.aptSuite,
                 city: formLocation.city,
@@ -633,30 +630,6 @@ const EditListing = () => {
                             rows={3}
                             required
                         />
-
-                        <p>Booking Type</p>
-                        <div className="booking-type-options" style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 500 }}>
-                                <input
-                                    type="radio"
-                                    name="bookingType"
-                                    value="instant"
-                                    checked={bookingType === "instant"}
-                                    onChange={(e) => setBookingType(e.target.value)}
-                                />
-                                Instant Booking (Guests book immediately)
-                            </label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 500 }}>
-                                <input
-                                    type="radio"
-                                    name="bookingType"
-                                    value="request"
-                                    checked={bookingType === "request"}
-                                    onChange={(e) => setBookingType(e.target.value)}
-                                />
-                                Booking Request (You approve each reservation)
-                            </label>
-                        </div>
 
                         <p>Nightly Rate (USD)</p>
                         <div className="price-input-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

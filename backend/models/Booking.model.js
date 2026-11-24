@@ -26,6 +26,14 @@ const BookingSchema = new mongoose.Schema(
             type: Number,
             default: 1,
         },
+        pricePerNight: {
+            type: Number,
+            default: 0,
+        },
+        subTotal: {
+            type: Number,
+            default: 0,
+        },
         totalPrice: {
             type: Number,
             required: true,

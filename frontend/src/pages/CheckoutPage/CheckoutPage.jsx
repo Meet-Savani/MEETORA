@@ -148,6 +148,8 @@ const CheckoutPage = () => {
         try {
             const finalBooking = {
                 ...bookingForm,
+                pricePerNight: listing?.price || 0,
+                subTotal: baseRent,
                 couponCode: appliedCoupon,
                 discountAmount: discount,
                 totalPrice: finalPrice,

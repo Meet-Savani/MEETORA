@@ -1104,8 +1104,60 @@
         }
 
         .data-table-scroll .data-table {
-            min-width: 0;
+            min-width: 820px;
             width: 100%;
+        }
+
+        .booking-ref-badge {
+            white-space: nowrap;
+            font-size: 13px;
+        }
+
+        .booking-property-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            max-width: 320px;
+            word-break: normal;
+            overflow-wrap: break-word;
+            white-space: normal;
+            hyphens: none;
+
+            .booking-property-title {
+                font-size: 13.5px;
+                line-height: 1.35;
+                color: var(--text-color);
+                word-break: normal;
+                overflow-wrap: break-word;
+                white-space: normal;
+                hyphens: none;
+            }
+
+            .booking-stay-dates {
+                font-size: 12px;
+                line-height: 1.3;
+                color: var(--secondary-text-color);
+                word-break: normal;
+                overflow-wrap: break-word;
+                white-space: normal;
+                hyphens: none;
+            }
+        }
+
+        .booking-guest-name,
+        .booking-host-name {
+            display: inline-block;
+            max-width: 160px;
+            word-break: normal;
+            overflow-wrap: break-word;
+            white-space: normal;
+            hyphens: none;
+            line-height: 1.3;
+        }
+
+        .booking-total-price {
+            white-space: nowrap;
+            font-weight: 600;
         }
     }
 
@@ -1353,15 +1405,25 @@
                                 flex: 1 !important;
                                 font-size: 12.5px !important;
                                 min-width: 0 !important;
-                                overflow-wrap: anywhere !important;
-                                word-break: break-word !important;
+                                overflow-wrap: break-word !important;
+                                word-break: normal !important;
+                                white-space: normal !important;
+                                hyphens: none !important;
 
                                 strong {
                                     font-size: 12.5px !important;
+                                    word-break: normal !important;
+                                    overflow-wrap: break-word !important;
+                                    white-space: normal !important;
+                                    hyphens: none !important;
                                 }
 
                                 small {
                                     font-size: 11px !important;
+                                    word-break: normal !important;
+                                    overflow-wrap: break-word !important;
+                                    white-space: normal !important;
+                                    hyphens: none !important;
                                 }
                             }
                         }
@@ -1433,8 +1495,10 @@
                                 flex: 1 !important;
                                 font-size: 13px !important;
                                 min-width: 0 !important;
-                                overflow-wrap: anywhere !important;
-                                word-break: break-word !important;
+                                overflow-wrap: break-word !important;
+                                word-break: normal !important;
+                                white-space: normal !important;
+                                hyphens: none !important;
                             }
                         }
                     }
@@ -2094,7 +2158,9 @@
                     .property-title-text {
                         font-size: 13px !important;
                         white-space: normal !important;
-                        word-break: break-word !important;
+                        word-break: normal !important;
+                        overflow-wrap: break-word !important;
+                        hyphens: none !important;
                         line-height: 1.3 !important;
                     }
 
@@ -2119,14 +2185,18 @@
 
                 .location-main {
                     font-size: 13px !important;
-                    word-break: break-word !important;
+                    word-break: normal !important;
+                    overflow-wrap: break-word !important;
                     white-space: normal !important;
+                    hyphens: none !important;
                 }
 
                 .location-sub {
                     font-size: 11px !important;
-                    word-break: break-word !important;
+                    word-break: normal !important;
+                    overflow-wrap: break-word !important;
                     white-space: normal !important;
+                    hyphens: none !important;
                 }
             }
 
@@ -2155,7 +2225,9 @@
                         .owner-name {
                             font-size: 12.5px !important;
                             white-space: normal !important;
-                            word-break: break-word !important;
+                            word-break: normal !important;
+                            overflow-wrap: break-word !important;
+                            hyphens: none !important;
                         }
 
                         .verified-host-tag {
@@ -2166,7 +2238,9 @@
 
                     .owner-email {
                         font-size: 11px !important;
-                        word-break: break-all !important;
+                        word-break: normal !important;
+                        overflow-wrap: break-word !important;
+                        hyphens: none !important;
                     }
                 }
             }

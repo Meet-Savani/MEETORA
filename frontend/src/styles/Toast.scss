@@ -66,8 +66,9 @@
             font-weight: 550;
             color: var(--text-color);
             line-height: 1.4;
-            overflow-wrap: anywhere;
-            word-break: break-word;
+            overflow-wrap: break-word;
+            word-break: normal;
+            hyphens: none;
         }
     }
 

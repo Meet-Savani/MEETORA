@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Navbar from '../components/Navbar/Navbar'
 import Footer from '../components/Footer/Footer'
-import Toast from '../components/Toast/Toast'
 import { Outlet, useLocation } from 'react-router-dom'
 
 const MainLayout = () => {
@@ -17,7 +16,6 @@ const MainLayout = () => {
     return (
         <>
             {!isAdminRoute && <Navbar theme={theme} setTheme={setTheme} />}
-            <Toast />
 
             <main className={isAdminRoute ? "admin-main-viewport" : ""}>
                 <Outlet />

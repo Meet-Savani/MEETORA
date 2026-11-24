@@ -9,7 +9,7 @@ const path = require('path');
 const fs = require('fs');
 const { authenticate } = require('../middleware/auth');
 const { isBookingCustomer, isBookingHost, isBookingParticipant } = require('../middleware/authorize');
-const { autoCompleteBookings } = require('../utils/bookingHelper');
+const { autoCompleteBookings, calculateBookingNights } = require('../utils/bookingHelper');
 
 // Helper to resolve accommodation image for PDF invoice with multi-layer fallback
 const resolveListingImageBuffer = async (listing) => {
@@ -194,17 +194,24 @@ router.post("/create", authenticate, async (req, res) => {
         const diffMs = end.getTime() - start.getTime();
         const nights = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)));
         const dayCount = nights;
-        let basePrice = listing.price * dayCount;
+        const pricePerNight = Number(listing.price);
+        let basePrice = Math.round(pricePerNight * dayCount * 100) / 100;
         let discountAmount = 0;
 
         if (couponCode) {
-            const couponDoc = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
+            const cleanCode = couponCode.trim().toUpperCase();
+            const couponDoc = await Coupon.findOne({ code: cleanCode, isActive: true });
             if (!couponDoc) {
                 return res.status(400).json({ message: "Invalid or inactive promo code." });
             }
 
             const now = new Date();
-            if (now < new Date(couponDoc.startDate) || now > new Date(couponDoc.endDate)) {
+            const expDate = new Date(couponDoc.endDate);
+            expDate.setHours(23, 59, 59, 999);
+            const stDate = new Date(couponDoc.startDate);
+            stDate.setHours(0, 0, 0, 0);
+
+            if (now < stDate || now > expDate) {
                 return res.status(400).json({ message: "This promo code is not active or has expired." });
             }
 
@@ -262,6 +269,8 @@ router.post("/create", authenticate, async (req, res) => {
             startDate,
             endDate,
             dayCount,
+            pricePerNight,
+            subTotal: basePrice,
             totalPrice,
             status,
             couponCode: couponCode || "",
@@ -530,26 +539,27 @@ router.get("/:bookingId/invoice", authenticate, isBookingParticipant, async (req
         doc.fillColor("#0f172a").fontSize(11).text(booking.listingId?.title || 'Listing Stay', 160, stayY + 28, { width: 180, height: 15, ellipsis: true });
         doc.fillColor("#475569").fontSize(10).text(`${booking.listingId?.city || ''}, ${booking.listingId?.country || ''}`, 160, stayY + 45);
 
-        const rawNights = Math.max(1, Math.round((new Date(booking.endDate) - new Date(booking.startDate)) / (1000 * 60 * 60 * 24))) || 1;
-        let nights = booking.dayCount || rawNights;
-        if (!booking.dayCount && booking.listingId?.price && booking.totalPrice) {
-            const netPaid = Math.round((booking.totalPrice / 1.18) * 100) / 100;
-            const impliedNights = Math.round(netPaid / booking.listingId.price);
-            if (impliedNights > 0 && Math.abs(impliedNights - nights) === 1) {
-                nights = impliedNights;
-            }
-        }
-
-        const discount = booking.discountAmount || 0;
-        const ratePerNight = booking.listingId?.price || (nights > 0 ? Math.round(((booking.totalPrice || 0) / nights) * 100) / 100 : 0);
-        const subTotal = Math.round(ratePerNight * nights * 100) / 100;
+        const nights = calculateBookingNights(booking);
+        const discount = Number(booking.discountAmount || 0);
+        const ratePerNight = (booking.pricePerNight !== undefined && booking.pricePerNight !== null && Number(booking.pricePerNight) > 0)
+            ? Number(booking.pricePerNight)
+            : (nights > 0 ? Math.round((((booking.totalPrice || 0) / 1.18 + discount) / nights) * 100) / 100 : Number(booking.listingId?.price || 0));
+        const subTotal = (booking.subTotal && Number(booking.subTotal) > 0)
+            ? Number(booking.subTotal)
+            : Math.round(ratePerNight * nights * 100) / 100;
         const netRent = Math.max(0, Math.round((subTotal - discount) * 100) / 100);
         const sgst = Math.round(netRent * 0.09 * 100) / 100;
         const cgst = Math.round(netRent * 0.09 * 100) / 100;
         const finalTotal = booking.totalPrice || Math.round((netRent + sgst + cgst) * 100) / 100;
 
+        const sDate = new Date(booking.startDate);
+        let eDate = new Date(booking.endDate);
+        if (!isNaN(sDate.getTime()) && !isNaN(eDate.getTime()) && eDate <= sDate) {
+            eDate = new Date(sDate.getTime() + 86400000);
+        }
+
         doc.fillColor("#475569").fontSize(9).text("STAY SCHEDULE", 360, stayY + 15);
-        doc.fillColor("#0f172a").fontSize(11).text(`${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate).toLocaleDateString()}`, 360, stayY + 28);
+        doc.fillColor("#0f172a").fontSize(11).text(`${sDate.toLocaleDateString()} - ${eDate.toLocaleDateString()}`, 360, stayY + 28);
         doc.fillColor("#475569").fontSize(10).text(`Duration: ${nights} Night${nights > 1 ? 's' : ''}`, 360, stayY + 45);
 
         const tableTop = 315;
@@ -627,13 +637,19 @@ router.get("/:bookingId/invoice", authenticate, isBookingParticipant, async (req
 router.get("/coupons/validate/:code", authenticate, async (req, res) => {
     try {
         const { code } = req.params;
-        const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
+        const cleanCode = (code || '').trim().toUpperCase();
+        const coupon = await Coupon.findOne({ code: cleanCode, isActive: true });
         if (!coupon) {
             return res.status(404).json({ message: "Invalid or inactive promo code." });
         }
         
         const now = new Date();
-        if (now < new Date(coupon.startDate) || now > new Date(coupon.endDate)) {
+        const expDate = new Date(coupon.endDate);
+        expDate.setHours(23, 59, 59, 999);
+        const stDate = new Date(coupon.startDate);
+        stDate.setHours(0, 0, 0, 0);
+
+        if (now < stDate || now > expDate) {
             return res.status(400).json({ message: "This promo code is not active or has expired." });
         }
         

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { setLogin, setToast } from '../../redux/state';
 import { useDispatch } from 'react-redux';
+import { ErrorOutline } from '@mui/icons-material';
 import '../../styles/Register.scss'
 
 import { BACKEND_BASE_URL } from '../../config/constants';
@@ -19,10 +20,17 @@ const RegisterPage = () => {
     });
 
     const [previewUrl, setPreviewUrl] = useState(null);
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
     const fileInputRef = useRef(null);
 
     const navigate = useNavigate();
     const dispatch = useDispatch();
+
+    // Clear any residual toast when mounting register page
+    useEffect(() => {
+        dispatch(setToast(null));
+    }, [dispatch]);
 
     const passwordMatch = formData.password === formData.confirmPassword || formData.confirmPassword === "";
 
@@ -42,6 +50,7 @@ const RegisterPage = () => {
 
     const handleChange = (e) => {
         const { name, value, files } = e.target;
+        if (error) setError("");
         setFormData(prev => ({
             ...prev,
             [name]: name === "profileImage" ? (files && files[0] ? files[0] : null) : value,
@@ -62,7 +71,23 @@ const RegisterPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError("");
 
+        if (!passwordMatch || formData.password !== formData.confirmPassword) {
+            setError("Passwords do not match");
+            return;
+        }
+
+        const cleanEmail = (formData.email || "").trim().toLowerCase();
+        const cleanFirstName = (formData.firstName || "").trim();
+        const cleanLastName = (formData.lastName || "").trim();
+
+        if (!cleanFirstName || !cleanLastName || !cleanEmail || !formData.password) {
+            setError("Please fill in all required fields.");
+            return;
+        }
+
+        setLoading(true);
         try {
             let profileImageBase64 = "";
             if (formData.profileImage) {
@@ -70,9 +95,9 @@ const RegisterPage = () => {
             }
 
             const payload = {
-                firstName: (formData.firstName || "").trim(),
-                lastName: (formData.lastName || "").trim(),
-                email: (formData.email || "").trim().toLowerCase(),
+                firstName: cleanFirstName,
+                lastName: cleanLastName,
+                email: cleanEmail,
                 password: formData.password,
                 profileImage: profileImageBase64,
             };
@@ -88,6 +113,8 @@ const RegisterPage = () => {
             const data = await response.json();
 
             if (response.ok) {
+                setError("");
+                dispatch(setToast(null));
                 dispatch(
                     setLogin({
                         user: data.user,
@@ -96,11 +123,13 @@ const RegisterPage = () => {
                 );
                 navigate("/");
             } else {
-                dispatch(setToast({ message: data.message || "Registration failed", type: "error" }));
+                setError(data?.message || "Registration failed. Please check your details.");
             }
-        } catch (error) {
-            console.error("Error during registration:", error.message);
-            dispatch(setToast({ message: error.message || "Registration error", type: "error" }));
+        } catch (err) {
+            console.error("Error during registration:", err.message);
+            setError("Unable to connect to the server. Please try again.");
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -146,6 +175,13 @@ const RegisterPage = () => {
 
                     {!passwordMatch && (
                         <p className="password_mismatch_error">Passwords do not match</p>
+                    )}
+
+                    {error && (
+                        <div className="register_error_line" role="alert">
+                            <ErrorOutline sx={{ fontSize: 18 }} />
+                            <span>{error}</span>
+                        </div>
                     )}
 
                     <input 
@@ -194,7 +230,9 @@ const RegisterPage = () => {
                         </label>
                     )}
 
-                    <button type='submit' disabled={!passwordMatch}>REGISTER</button>
+                    <button type='submit' disabled={!passwordMatch || loading}>
+                        {loading ? "REGISTERING..." : "REGISTER"}
+                    </button>
                 </form>
                 <Link to="/login">Already have an account? Log In Here</Link>
             </div>

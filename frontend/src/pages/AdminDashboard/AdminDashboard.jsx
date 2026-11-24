@@ -19,6 +19,7 @@ import ThemeToggle from '../../components/ThemeToggle/ThemeToggle';
 import { resolveImageUrl } from '../../utils/image';
 import { normalizeAmenities } from '../../utils/amenities';
 import { broadcastSync, subscribeSync } from '../../utils/syncEvents';
+import { calculateBookingNights } from '../../utils/bookingHelper';
 
 const DonutChart = ({ data = [], colors = [] }) => {
     const [hoveredIdx, setHoveredIdx] = useState(null);
@@ -1564,35 +1565,78 @@ const AdminDashboard = () => {
 
                         <DataTable
                             columns={[
-                                { key: 'invoiceRef', label: 'Booking Ref', sortable: true, render: (b) => <strong>{b.invoiceRef || (`INV-${b._id.toString().substr(-6).toUpperCase()}`)}</strong> },
-                                { key: 'listingId.title', label: 'Property', sortable: true, render: (b) => (
-                                    <div>
-                                        <strong>{b.listingId?.title}</strong>
-                                        <br />
-                                        <small style={{ color: 'var(--secondary-text-color)' }}>
-                                            {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()} ({b.dayCount || Math.max(1, Math.round((new Date(b.endDate) - new Date(b.startDate)) / (1000 * 60 * 60 * 24)))} {(b.dayCount || Math.max(1, Math.round((new Date(b.endDate) - new Date(b.startDate)) / (1000 * 60 * 60 * 24)))) > 1 ? 'nights' : 'night'})
-                                        </small>
-                                    </div>
-                                )},
-                                { key: 'customerId.firstName', label: 'Guest', sortable: true, render: (b) => `${b.customerId?.firstName || ''} ${b.customerId?.lastName || ''}` },
-                                { key: 'hostId.firstName', label: 'Host', sortable: true, render: (b) => `${b.hostId?.firstName || ''} ${b.hostId?.lastName || ''}` },
-                                { key: 'totalPrice', label: 'Total Paid', sortable: true, render: (b) => `$${Number(b.totalPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
-                                { key: 'status', label: 'Status', sortable: true, render: (b) => <span className={`status-badge-table ${b.status}`}>{b.status}</span> },
-                                { key: 'actions', label: 'Actions', render: (b) => (
-                                    <div className="table-actions">
-                                        <button
-                                            className="table-action-btn invoice-btn"
-                                            style={{ background: "var(--primary-color, #22c55e)", color: "white", padding: "6px 14px", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "12px", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "5px" }}
-                                            onClick={() => openAuthenticatedPdf(`/bookings/${b._id}/invoice`).catch(err => {
-                                                console.error(err);
-                                                dispatch(setToast({ message: "Unable to open invoice. Payment may not be completed yet.", type: "error" }));
-                                            })}
-                                            title="View / Download Invoice"
-                                        >
-                                            <Receipt sx={{ fontSize: 14 }} /> Invoice
-                                        </button>
-                                    </div>
-                                )}
+                                { 
+                                    key: 'invoiceRef', 
+                                    label: 'Booking Ref', 
+                                    sortable: true, 
+                                    render: (b) => <strong className="booking-ref-badge">{b.invoiceRef || (`INV-${b._id.toString().substr(-6).toUpperCase()}`)}</strong> 
+                                },
+                                { 
+                                    key: 'listingId.title', 
+                                    label: 'Property', 
+                                    sortable: true, 
+                                    render: (b) => {
+                                        const nights = calculateBookingNights(b);
+                                        const s = b.startDate ? new Date(b.startDate) : null;
+                                        let e = b.endDate ? new Date(b.endDate) : null;
+                                        if (s && e && !isNaN(s.getTime()) && !isNaN(e.getTime()) && e <= s) {
+                                            e = new Date(s.getTime() + 86400000);
+                                        }
+                                        const startDateStr = s && !isNaN(s.getTime()) ? s.toLocaleDateString() : 'N/A';
+                                        const endDateStr = e && !isNaN(e.getTime()) ? e.toLocaleDateString() : 'N/A';
+                                        return (
+                                            <div className="booking-property-cell">
+                                                <strong className="booking-property-title">{b.listingId?.title || 'Property Stay'}</strong>
+                                                <small className="booking-stay-dates">
+                                                    {startDateStr} - {endDateStr} ({nights} {nights > 1 ? 'nights' : 'night'})
+                                                </small>
+                                            </div>
+                                        );
+                                    }
+                                },
+                                { 
+                                    key: 'customerId.firstName', 
+                                    label: 'Guest', 
+                                    sortable: true, 
+                                    render: (b) => <span className="booking-guest-name">{`${b.customerId?.firstName || ''} ${b.customerId?.lastName || ''}`.trim() || 'Guest'}</span> 
+                                },
+                                { 
+                                    key: 'hostId.firstName', 
+                                    label: 'Host', 
+                                    sortable: true, 
+                                    render: (b) => <span className="booking-host-name">{`${b.hostId?.firstName || ''} ${b.hostId?.lastName || ''}`.trim() || 'Host'}</span> 
+                                },
+                                { 
+                                    key: 'totalPrice', 
+                                    label: 'Total Paid', 
+                                    sortable: true, 
+                                    render: (b) => <span className="booking-total-price">${Number(b.totalPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> 
+                                },
+                                { 
+                                    key: 'status', 
+                                    label: 'Status', 
+                                    sortable: true, 
+                                    render: (b) => <span className={`status-badge-table ${b.status}`}>{b.status}</span> 
+                                },
+                                { 
+                                    key: 'actions', 
+                                    label: 'Actions', 
+                                    render: (b) => (
+                                        <div className="table-actions">
+                                            <button
+                                                className="table-action-btn invoice-btn"
+                                                style={{ background: "var(--primary-color, #22c55e)", color: "white", padding: "6px 14px", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "12px", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "5px", whiteSpace: "nowrap" }}
+                                                onClick={() => openAuthenticatedPdf(`/bookings/${b._id}/invoice`).catch(err => {
+                                                    console.error(err);
+                                                    dispatch(setToast({ message: "Unable to open invoice. Payment may not be completed yet.", type: "error" }));
+                                                })}
+                                                title="View / Download Invoice"
+                                            >
+                                                <Receipt sx={{ fontSize: 14 }} /> Invoice
+                                            </button>
+                                        </div>
+                                    )
+                                }
                             ]}
                             data={filteredBookings}
                             searchKeys={['listingId.title', 'customerId.firstName', 'customerId.lastName', 'hostId.firstName', 'hostId.lastName', 'status']}
